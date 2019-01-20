@@ -1,6 +1,6 @@
 import statistics
 import asyncio
-import sqlite3,time
+import sqlite3
 import concurrent.futures
 from itertools import groupby
 import pygal
@@ -11,7 +11,7 @@ def multi(func,data,nbworker):
         a=list(executor.map(func, data))
     return a
 
-start=time.clock()
+
 conn = sqlite3.connect('tout.db')
 cursor = conn.cursor()
 cursor.execute('''SELECT taux,nom,prix,date,lien FROM data''')
@@ -28,17 +28,22 @@ def final(don,idd):
     return dataa
 
 databeta=[]
+
 for row in all_rows:
     databeta.append((str(row[3]),(str(row[0])),row[1][0:2],row[1][0:5],int(row[2])))
+    
 print(len(databeta))
+
 data=final(databeta,2)
+
 matrice=[]
+
 for x in data:
     matrice.append(final(x,0))
 print(len(matrice))
 print(len(matrice[75]))
 #matrice ou [departement][date][donnees]
-print(time.clock() - start)
+
 
 
 
@@ -75,7 +80,7 @@ class DataDept():
                 temp.append((float(thing[1])))
                 pp.append((int(thing[4])))
             self.SortedData.append((key,(statistics.mean(temp)),statistics.pvariance(temp)))
-            #print("Date:",key," moyenne:",str(statistics.mean(temp))[0:5]," Var:",str(statistics.pvariance(temp))[0:5]," nb: ",len(temp)," moyenne:",str(int(statistics.mean(pp)))," Var:",str(statistics.pvariance(pp))[0:7])
+            print("Date:",key," moyenne:",str(statistics.mean(temp))[0:5]," Var:",str(statistics.pvariance(temp))[0:5]," nb: ",len(temp)," moyenne:",str(int(statistics.mean(pp)))," Var:",str(statistics.pvariance(pp))[0:7])
 
         return(self.SortedData)
 
@@ -107,7 +112,7 @@ class DataDeptBeta():
                 pp.append((int(thing[4])))
             self.SortedData.append((key,(statistics.mean(temp)),statistics.pvariance(temp)))
             #print("Date:",key," moyenne:",str(statistics.mean(temp))[0:5]," Var:",str(statistics.pvariance(temp))[0:5]," nb: ",len(temp)," moyenne:",str(int(statistics.mean(pp)))," Var:",str(statistics.pvariance(pp))[0:7])
-        #print("donnee triees")
+        print("donnee triees")
         return(self.SortedData)
 
     def Prep(self):
@@ -123,7 +128,7 @@ class DataDeptBeta():
 def momo(dp):
     return(DataDept(all_rows,str(dp)))
 
-tt=((DataDept(all_rows,'13').data))
+tt=((DataDept(all_rows,'75').data))
 """
 faire des  generateur
 
@@ -178,7 +183,7 @@ pool.close()
 pool.join()
 print(time.clock() - starttt)
 
-"""
+
 
 
 
@@ -199,4 +204,4 @@ def graph(dep):
 
 
 graph(13)
-
+"""
