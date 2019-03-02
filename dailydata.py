@@ -2,7 +2,7 @@ from bs4 import BeautifulSoup
 import urllib.request,sqlite3,re,hashlib
 from datetime import datetime
 
-conn = sqlite3.connect('toutdd.db')
+conn = sqlite3.connect('toutf.db')
 cursor = conn.cursor()
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS data(
@@ -49,7 +49,7 @@ url = "http://www.castorus.com/activite.php"
 html = urllib.request.urlopen(url).read()
 soup = BeautifulSoup(html)
 
-set=[]
+set=[]#nous sert pour stocker les hash, pour les doublons
 i = datetime.now()
 dd=i.strftime('%Y/%m/%d') #date
 
@@ -59,17 +59,20 @@ stat=0
 surface=0
 doublon=0
 indefini=0
+zero=0
 
 for row in soup.find_all('li',attrs={"class" : "nodeborde"}):
+    dif=0
     stat=stat+1
     marqueur=0
-    
     rex = re.compile(r'.*?<img.*?>(.*?)</span>.*?',re.S|re.M)
     match = rex.match(str(row))
     if match:
         text = match.groups()[0].strip()
         b=text[0:-1]#variation du prix
-        
+        if ((b=="0.00") or (b=="-0.00")):
+            marqueur=1
+            zero=zero+1
     rex = re.compile(r'.*?<a.*?>(.*?)</a>.*?',re.S|re.M)
     match = rex.match(str(row))
     if match:
@@ -79,13 +82,14 @@ for row in soup.find_all('li',attrs={"class" : "nodeborde"}):
         if match:
             g=match.groups()[0].strip() #surface
         else:
-            marqueur=1#pas de surface, pas d'injection
+            marqueur=1#pas de surface
             surface=surface+1
+            dif=1
         f=find_type(text) #on cherche le type d'appartement
-        if f==0:
-            print(text)
+        if f==0:#pas de type
             indefini=indefini+1
             marqueur=1
+            dif=1
         else:
             pass
         h=str(text[0:5]) #codepostal
@@ -96,7 +100,6 @@ for row in soup.find_all('li',attrs={"class" : "nodeborde"}):
         else:
             set.append(i)
         c=text #description
-        
     rex = re.compile(r'.*?</strike>(.*?)</span></li>.*?',re.S|re.M)
     match = rex.match(str(row))
     if match:
@@ -105,8 +108,6 @@ for row in soup.find_all('li',attrs={"class" : "nodeborde"}):
         
     rex = re.compile(r'.*?<a href="(.*?)">.*?',re.S|re.M)#on extrait le lien
     match = rex.match(str(row))
-
-
     if match:
         text = match.groups()[0].strip()
         e=text#lien
@@ -114,20 +115,23 @@ for row in soup.find_all('li',attrs={"class" : "nodeborde"}):
             cursor.execute("""INSERT INTO data(taux,nom,prix,date,lien,type,surface,codepostal,hash) VALUES(?, ?, ?, ?, ?,?,?,?,?)""", (b,c,d,dd,e,f,g,h,i))
             pass
         else:
-            #cursor.execute("""INSERT INTO data(taux,nom,prix,date,lien,type,surface,codepostal,hash) VALUES(?, ?, ?, ?, ?,?,?,?,?)""", (b,c,d,dd,e,f,g,h,i))
+            f=0# les indesirables sont injectés avec f=0, sauf les doubles et le sans variation
+            if dif==1:
+                cursor.execute("""INSERT INTO data(taux,nom,prix,date,lien,type,surface,codepostal,hash) VALUES(?, ?, ?, ?, ?,?,?,?,?)""", (b,c,d,dd,e,f,g,h,i))
+            else:
+                pass
             pass
 
 conn.commit()
 conn.close()
-
-
 
 print("===========================")
 print("Nombre de lignes: "+str(stat))
 print("nombre de doublons: "+str(doublon))
 print("nombre d'indefinis: "+str(indefini))
 print("nombre de sans surface: "+str(surface))
-print("taux de merdes: "+str(((doublon+indefini+surface)/stat)*100)[0:3]+"%")
+print("nombre de sans variation: "+str(zero))
+print("taux de merdes: "+str(((doublon+indefini+surface+zero)/stat)*100)[0:3]+"%")
 print("===========================")
 
 
