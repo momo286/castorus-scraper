@@ -50,12 +50,13 @@ class DataDept():
         self.stat['dep']=self.dept
         print("--"+self.dept+"--" )
         #print(str(dept)+" "+str(self.stat['moy20']))
+        print(self.stat)
         
 
        
-    def DataLoad(self): # on charge les données dans un tableau en les filtrant et en les triant que ce soit pour les departements ou Codes Postaux
+    def DataLoad(self): # on charge les données dans un tableau en les filtrant et en les triant que ce soit pour les departements ou Codes Postaux on obtient un tableau avec des ('2019/01/21', '-1.40', '75', '75012', 985000)
         for row in self.AllData:
-            if self.dept=="99":
+            if self.dept=="99": #si tu mets 99 il utilise toutes les annonces
                 self.data.append((str(row[3]),(str(row[0])),row[1][0:2],row[1][0:5],int(row[2])))
                 pass
             if len(self.dept)==2:
@@ -64,9 +65,9 @@ class DataDept():
             if len(self.dept)==5:
                 if row[1][0:5]==self.dept :
                     self.data.append((str(row[3]),(str(row[0])),row[1][0:5],row[1][0:5],int(row[2])))
-        self.data.sort(key=lambda x: x[0])
-        #print((self.data))
+        self.data.sort(key=lambda x: x[0]) #tri par date
 
+        
     def DataGroupAll(self,*args):
         [self.DataGroup(x) for x in args ]
 
@@ -80,7 +81,7 @@ class DataDept():
                 temp.append((float(thing[1])))
                 x=x+1
             buffer.append((key,(statistics.mean(temp)),statistics.pvariance(temp),x))
-            #print("Date:",key," moyenne:",str(statistics.mean(temp))[0:5]," Var:",str(statistics.pvariance(temp))[0:5]," nb: ",len(temp),self.dept)
+            print("Date:",key," moyenne:",str(statistics.mean(temp))[0:5]," Var:",str(statistics.pvariance(temp))[0:5]," nb: ",len(temp))
             
         for x in range(0,nj):
             try:
@@ -89,7 +90,7 @@ class DataDept():
                 pass
         self.listtab.append(fc)
         print("---")
-        print(self.listtab)
+        #print(self.listtab)
 
         #print(fc)
         self.calc(fc) #calcul des stats
@@ -132,14 +133,14 @@ class DataDept():
 
 
 #debut du porgrammes
-conn = sqlite3.connect('toutdd.db')
+conn = sqlite3.connect('tout.db')
 cursor = conn.cursor()
 cursor.execute('''SELECT taux,nom,prix,date,lien FROM data''')
 all_rows = cursor.fetchall()
 
 graph(75)
 """
-#on obtient tous les codes postaux
+#on obtient tous les codes posta
 ldep=cDep() #liste de tous les departements
 SortCp(all_rows) #extractions de tous les codes postaux
 
