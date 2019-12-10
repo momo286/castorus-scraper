@@ -1,1 +1,1 @@
-# immowatch A python script to scrub rel estate trend and then analyze them
+# immowatch - A python script to scrub real estate trends and then analyze them
