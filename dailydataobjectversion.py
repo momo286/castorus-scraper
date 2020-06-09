@@ -2,7 +2,6 @@ from bs4 import BeautifulSoup
 import urllib.request,sqlite3,re,hashlib
 from datetime import datetime
 
-
 class Site():#prends les données brut html
     def __init__(self,url):
         self.url=url
@@ -78,24 +77,15 @@ CREATE TABLE IF NOT EXISTS data(
      codepostal TEXT,
      hash TEXT)""")
         self.conn.commit()
-        print("aa")
 
     def datainject(self):
-        print("ss")
         for line in self.data:
             self.cursor.execute("INSERT INTO data(taux,nom,prix,date,lien,codepostal,hash) VALUES(?, ?, ?, ?, ?,?,?)", (line[0],line[5],line[3],self.temps,line[4],line[2],line[1]))
         self.conn.commit()
-        print("bb")
         self.conn.close()
 
 Castorus=Site("http://www.castorus.com/activite.php")
-
 Castorus.extraction()
-
 Castorus.tri()
-
 Data=DataSite(Castorus.resultats)
-
 Inject=InjectData(Data.resultats,"/home/tgif/ppppp.db")
-
-print (datetime.datetime.now())
