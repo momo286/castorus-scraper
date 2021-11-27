@@ -1,4 +1,4 @@
-The main script is :
+The main scripts are :
 
 -dailydata.py
 It scrapes the castorus page which displays the changes for the last 24 hours and puts it into an sql file.
