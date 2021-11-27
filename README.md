@@ -9,10 +9,10 @@ It doesn't modify the data, except for two things in order to have clean data:
 
 -dailydataobjectversion.py is an object version
 
-Two notebooks are included for experiments with data
-:
-"Per item" is a notebook that gives you a DataFrame where each line contains a property and all the price variations in a list
+Two notebooks are included for experiments with data:
+
+"Per item" is a notebook that gives you a DataFrame where each line contains a property and all the price variations in a list.
 
 
-"Per Tendency"  is a few graphs to follow price variation over time in different regions, based on the type of property
+"Per Tendency"  is a few graphs to follow price variation over time in different regions, based on the type of property.
 
