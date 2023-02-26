@@ -1,13 +1,7 @@
 The main scripts are :
 
 -dailydata.py
-It scrapes the castorus page which displays the changes for the last 24 hours and puts it into an sql file.
-
-It doesn't modify the data, except for two things in order to have clean data:
-  -It removes duplicates: sometimes for the same property you'll see the same variation more than once, it keeps just one of them
-  -Some properties have variations that are equal to 0, those lines are deleted
-
--dailydataobjectversion.py is an object version
+It scrapes the castorus page which displays the changes for the last 24 hours and puts it into an sqlite file.
 
 Two notebooks are included for experiments with data:
 
