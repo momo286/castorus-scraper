@@ -1,17 +1,26 @@
+
 from bs4 import BeautifulSoup
-import urllib.request,sqlite3,re,hashlib
+import sqlite3,re,requests
 from datetime import datetime
+
+dbname="lol.db"
+
+def remove_tags(text):
+    TAG_RE = re.compile(r'<[^>]+>')
+    return TAG_RE.sub('', str(text))
 
 class Site():#prends les données brut html
     def __init__(self,url):
         self.url=url
         self.resultats=[]
+        self.headers={"User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36"}
 
     def extraction(self): # on extrait le html
-        self.soup=BeautifulSoup(urllib.request.urlopen(self.url).read()) 
-
+        response=requests.get(self.url,headers=self.headers)
+        self.soup=BeautifulSoup(response.content)
+ 
     def tri(self):#on choisit les lignes
-        for row in self.soup.find_all('li',attrs={"class" : "nodeborde"}):
+        for row in self.soup.find_all('tr'):
             self.resultats.append(row)
 
 class Ligne():
@@ -19,42 +28,30 @@ class Ligne():
             self.ligne=ligne
 
         def trait(self):
-            rex = re.compile(r'.*?<img.*?>(.*?)</span>.*?',re.S|re.M)
-            match = rex.match(str(self.ligne))
-            text = match.groups()[0].strip()
-            variationprix=text[0:-1]#variation du prix
-            rex = re.compile(r'.*?<a.*?>(.*?)</a>.*?',re.S|re.M)
-            match = rex.match(str(self.ligne))
-            textannonce = match.groups()[0].strip()#text
-            hashcp = hashlib.md5((textannonce).encode('utf-8')).hexdigest()
-            codepostal=str(textannonce[0:5]) #codepostal
-            rex = re.compile(r'.*?</strike>(.*?)</span></li>.*?',re.S|re.M)
-            match = rex.match(str(self.ligne))
-            text = match.groups()[0].strip()
-            prix=text[5:-2] #prix
             rex = re.compile(r'.*?<a href="(.*?)">.*?',re.S|re.M)#on extrait le lien
             match = rex.match(str(self.ligne))
-            text = match.groups()[0].strip()
-            lien=text#lien
-            return [variationprix,hashcp,codepostal,prix,lien,textannonce]
+            lien=match.groups()[0].strip()
+            z=remove_tags(self.ligne).splitlines()
+            variationprix=(z[2].lstrip().replace('%', '').replace('+', '')) #taux
+            codepostal=(z[3][0:5]) #cp
+            textannonce=(z[4].lstrip()) #description
+            prix=(z[5].lstrip().split(" ")[0])#prix
+            return [variationprix,codepostal,prix,lien,textannonce]
 
 class DataSite():#traitement des données
     def __init__(self,rawdata):
         self.rawdata=rawdata
         self.resultats=[]
-        self.set=[]
         self.tri()
 
     def tri(self): #enleve les doubles en se basant sur le hash extrait les données
         for row in self.rawdata:
-            x=Ligne(row).trait()
-            if x[1] in self.set:
-                pass
-            else:
-                self.set.append(x[1])
+            try:
+                x=Ligne(row).trait()
                 self.resultats.append(x)
-        print("nombre de lignes extraites: "+ str(len(self.resultats)))
-            
+            except Exception as inst:
+                print(inst)
+          
 class InjectData():
     def __init__(self,data,dbname):
         self.data=data
@@ -74,18 +71,17 @@ CREATE TABLE IF NOT EXISTS data(
      prix TEXT,
      date TEXT,
      lien TEXT,
-     codepostal TEXT,
-     hash TEXT)""")
+     codepostal TEXT )""")
         self.conn.commit()
 
     def datainject(self):
         for line in self.data:
-            self.cursor.execute("INSERT INTO data(taux,nom,prix,date,lien,codepostal,hash) VALUES(?, ?, ?, ?, ?,?,?)", (line[0],line[5],line[3],self.temps,line[4],line[2],line[1]))
+            self.cursor.execute("INSERT INTO data(taux,nom,prix,date,lien,codepostal) VALUES(?, ?, ?, ?, ?,?)", (line[0],line[4],line[2],self.temps,line[3],line[1]))
         self.conn.commit()
         self.conn.close()
 
-Castorus=Site("http://www.castorus.com/activite.php")
+Castorus=Site("https://www.castorus.com/activite.php")
 Castorus.extraction()
 Castorus.tri()
 Data=DataSite(Castorus.resultats)
-Inject=InjectData(Data.resultats,"/home/tgif/ppppp.db")
+Inject=InjectData(Data.resultats,dbname)
